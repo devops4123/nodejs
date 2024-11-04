@@ -5,15 +5,26 @@ const { generateToken } = require('../../utils/jwt.js');
 // Admin Signup
 exports.signup = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
+    if (!username || !password || !email) {
+      return res.status(400).json({ message: 'Username, email, and password are required' });
+    }
+    
+    // Check if the email already exists
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(409).json({ message: 'Email already exists' });
+    }
+
     const hashedPassword = await hashPassword(password);
-    const admin = new Admin({ username, password: hashedPassword });
+    const admin = new Admin({ username, password: hashedPassword, email });
     await admin.save();
-    res.status(201).json({ message: 'Admin created successfully' });
+    res.status(201).json({ message: 'Admin created successfully' ,data : admin});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Admin Login
 exports.login = async (req, res) => {
